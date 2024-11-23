@@ -1,5 +1,6 @@
 #include "courserepository.h"
 #include "course.h"
+#include "qdir.h"
 
 CourseRepository::CourseRepository() : ActivityRepository(ActivityType::CourseType, "courses.csv") {
     qDebug() << "Course Repository Created";
@@ -10,10 +11,30 @@ CourseRepository::CourseRepository() : ActivityRepository(ActivityType::CourseTy
     // print all
     for (auto &activity : activities)
         qDebug() << activity->get_title();
+}
 
-    // remove(activities[0]);
-    add(new class Course("Course 1", "Description 1", "Location 1", 10, QUuid::createUuid(), QUuid::createUuid(), QDate::currentDate(), QDate::currentDate(), QTime::currentTime(), QTime::currentTime(), QSet<Day>{Day::Monday, Day::Tuesday}));
-    activities[1]->set_title("This is my title updated");
-    update(activities[1]);
-    store();
+
+QList<QUuid> CourseRepository::get_course_prerequisites(QUuid course_id) {
+    QFile file(getCurrentDir() + "/courses-prerequisites.csv");
+    if (!file.open(QIODevice::ReadOnly))
+        throw std::runtime_error(("Could not open file: " + file.fileName() + ", Error: " + file.errorString()).toStdString());
+
+    QTextStream in(&file);
+    in.readLine();
+    QList<QUuid> result;
+    while(!in.atEnd()) {
+        QStringList row = parseCsvLine(in.readLine());
+        if (QUuid(row[0]) == course_id) {
+            for (int i = 1; i < row.size(); i++) {
+                result.append(QUuid(row[i]));
+            }
+            return result;
+        }
+    }
+
+    throw std::runtime_error("Course not found");
+}
+
+QList<QUuid> CourseRepository::get_course_prerequisites(Course* course) {
+    return get_course_prerequisites(course->get_id());
 }

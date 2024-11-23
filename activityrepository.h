@@ -65,6 +65,7 @@ public:
     // Preconditions: none
     // Postconditions: all the activities are returned from the container
     QList<Activity*> get_all();
+
 };
 
 #endif // ACTIVITYREPOSITORY_H
